@@ -6,24 +6,45 @@ package mr
 // remember to capitalize all names.
 //
 
-import "os"
+import (
+	"os"
+)
 import "strconv"
 
-//
-// example to show how to declare the arguments
-// and reply for an RPC.
-//
-
-type ExampleArgs struct {
-	X int
-}
-
-type ExampleReply struct {
-	Y int
-}
-
 // Add your RPC definitions here.
+type category string
 
+const (
+	MAPPER  category = "mapper"
+	REDUCER category = "reducer"
+)
+
+type RegisterArgs struct {
+}
+
+type RegisterReply struct {
+	Assigned    bool     `json:"assigned"`
+	TaskID      int      `json:"taskID"`
+	NReduce     int      `json:"NReduce"`
+	Category    category `json:"category"`
+	MapFile     string   `json:"mapFile"`
+	ReduceFiles []string `json:"reduceFiles"`
+}
+
+type CommitMapArgs struct {
+	TaskID int      `json:"taskID"`
+	Files  []string `json:"files"`
+}
+
+type CommitMapReply struct {
+}
+
+type CommitReduceArgs struct {
+	TaskID int `json:"taskID"`
+}
+
+type CommitReduceReply struct {
+}
 
 // Cook up a unique-ish UNIX-domain socket name
 // in /var/tmp, for the coordinator.
