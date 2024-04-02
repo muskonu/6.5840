@@ -29,10 +29,10 @@ func (rf *Raft) followerLoop() {
 
 func (rf *Raft) candidateLoop() {
 	for rf.killed() == false {
-
+		rf.mu.Lock()
 		select {
 		case <-rf.timeoutTicker.C:
-			rf.mu.Lock()
+
 			// 成为candidate
 			rf.BecomeCandidate()
 
@@ -78,6 +78,7 @@ func (rf *Raft) candidateLoop() {
 
 			}
 		default:
+			rf.mu.Unlock()
 		}
 		// pause for a random amount of time between 50 and 350
 		// milliseconds.

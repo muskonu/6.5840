@@ -147,8 +147,9 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 type RequestVoteArgs struct {
 	Term        int
 	CandidateId int
-	//LastLogIndex int //安全性，选举限制
-	//LastLogTerm  int //安全性，选举限制
+
+	LastLogIndex int //安全性，选举限制
+	LastLogTerm  int //安全性，选举限制
 }
 
 // example RequestVote RPC reply structure.
@@ -228,9 +229,15 @@ func (rf *Raft) sendAppendEntries(server int, args *AppendEntriesArgs, reply *Ap
 // term. the third return value is true if this server believes it is
 // the leader.
 func (rf *Raft) Start(command interface{}) (int, int, bool) {
-	index := -1
-	term := -1
-	isLeader := true
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	index := rf.log[len(rf.log)-1].Index
+	term := rf.currentTerm
+	isLeader := rf.state == LEADER
+
+	if isLeader {
+
+	}
 
 	// Your code here (3B).
 
