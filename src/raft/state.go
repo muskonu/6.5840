@@ -1,15 +1,10 @@
 package raft
 
-import (
-	"math"
-	"time"
-)
-
 func (rf *Raft) BecomeFollower(term int) {
+	DPrintf("%d become follower,From %s Term %d\n", rf.me, stateString(rf.state), rf.currentTerm)
 	rf.state = FOLLOWER
 	rf.currentTerm = term
-	rf.resetTicker(500)
-	DPrintf("%d become follower,From %s Term %d\n", rf.me, stateString(rf.state), rf.currentTerm)
+	rf.votedFor = -1
 }
 
 func (rf *Raft) BecomeCandidate() {
@@ -22,7 +17,11 @@ func (rf *Raft) BecomeCandidate() {
 
 func (rf *Raft) BecomeLeader() {
 	rf.state = LEADER
-	rf.resetTicker(math.MaxInt / int(time.Millisecond) / 2)
+	for i := 0; i < len(rf.nextIndex); i++ {
+		rf.nextIndex[i] = len(rf.log)
+	}
+	rf.resetHeartbeat()
+
 	DPrintf("%d become leader, Term %d\n", rf.me, rf.currentTerm)
 }
 
@@ -31,9 +30,9 @@ func stateString(i role) string {
 	case 0:
 		return "FOLLOWER"
 	case 1:
-		return "CANDIDATE"
-	case 2:
 		return "LEADER"
+	case 2:
+		return "CANDIDATE"
 	}
 	return ""
 }
