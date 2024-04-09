@@ -117,7 +117,7 @@ func (rf *Raft) sendAppendEntries(server int) {
 		LeaderCommit: rf.commitIndex,
 	}
 
-	DPrintf("leader%d send entry to %d, Term %d, prevLogIndex:%d , prevLogIndex:%d ,Entries len:%d\n", rf.me,
+	DPrintf("leader%d send entry to %d, Term %d, prevLogIndex:%d , prevLogTerm:%d ,Entries len:%d\n", rf.me,
 		server, rf.currentTerm, args.PrevLogIndex, args.PrevLogTerm, len(args.Entries))
 
 	go func() {
@@ -150,6 +150,7 @@ func (rf *Raft) sendAppendEntries(server int) {
 						if rf.matchIndex[i] >= newMatchIndex {
 							count++
 							if count >= len(rf.peers)/2+1 {
+								rf.persist()
 								rf.commitIndex = newMatchIndex
 								break
 							}
