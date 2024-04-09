@@ -50,7 +50,7 @@ func (rf *Raft) tickerLoop() {
 									voteCount = 0
 									// no-op
 									rf.log = append(rf.log, Entry{
-										Index: rf.log[len(rf.log)-1].Index,
+										Index: rf.log[len(rf.log)-1].Index + 1,
 										Term:  rf.currentTerm,
 										Cmd:   nil,
 									})
