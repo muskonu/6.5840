@@ -16,6 +16,7 @@ func min(a, b int) int {
 		return b
 	}
 	return a
+	// no-op
 }
 
 func max(a, b int) int {

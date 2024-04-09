@@ -50,6 +50,19 @@ func (rf *Raft) tickerLoop() {
 									voteCount = 0
 									rf.BecomeLeader()
 								}
+								// no-op
+								rf.log = append(rf.log, Entry{
+									Index: rf.log[len(rf.log)-1].Index,
+									Term:  rf.currentTerm,
+									Cmd:   nil,
+								})
+								for j := 0; j < len(rf.peers); j++ {
+									// 排除自身
+									if rf.me == j {
+										continue
+									}
+									rf.sendAppendEntries(j)
+								}
 							}
 							//发现更高任期，be follower
 							if reply.Term > rf.currentTerm {
