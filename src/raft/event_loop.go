@@ -48,21 +48,21 @@ func (rf *Raft) tickerLoop() {
 								voteCount++
 								if voteCount >= int64(len(rf.peers)/2+1) {
 									voteCount = 0
-									// no-op
-									rf.log = append(rf.log, Entry{
-										Index: rf.log[len(rf.log)-1].Index + 1,
-										Term:  rf.currentTerm,
-										Cmd:   nil,
-									})
+									//// no-op
+									//rf.log = append(rf.log, Entry{
+									//	Index: rf.log[len(rf.log)-1].Index + 1,
+									//	Term:  rf.currentTerm,
+									//	Cmd:   nil,
+									//})
 									rf.BecomeLeader()
-									// 发送no-op
-									for j := 0; j < len(rf.peers); j++ {
-										// 排除自身
-										if rf.me == j {
-											continue
-										}
-										rf.sendAppendEntries(j)
-									}
+									//// 发送no-op
+									//for j := 0; j < len(rf.peers); j++ {
+									//	// 排除自身
+									//	if rf.me == j {
+									//		continue
+									//	}
+									//	rf.sendAppendEntries(j)
+									//}
 								}
 							}
 							//发现更高任期，be follower
