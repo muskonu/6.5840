@@ -18,7 +18,7 @@ func (rf *Raft) BecomeCandidate() {
 func (rf *Raft) BecomeLeader() {
 	rf.state = LEADER
 	for i := 0; i < len(rf.nextIndex); i++ {
-		rf.nextIndex[i] = len(rf.log)
+		rf.nextIndex[i] = rf.lastIncludedIndex + 1 + len(rf.log)
 	}
 	rf.resetHeartbeat()
 
