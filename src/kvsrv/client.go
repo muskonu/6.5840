@@ -2,7 +2,6 @@ package kvsrv
 
 import (
 	"6.5840/labrpc"
-	"math"
 )
 import "crypto/rand"
 import "math/big"
@@ -10,7 +9,6 @@ import "math/big"
 type Clerk struct {
 	server *labrpc.ClientEnd
 	// You will have to modify this struct.
-	receiveNonce int64
 }
 
 func nrand() int64 {
@@ -23,7 +21,6 @@ func nrand() int64 {
 func MakeClerk(server *labrpc.ClientEnd) *Clerk {
 	ck := new(Clerk)
 	ck.server = server
-	ck.receiveNonce = math.MaxInt
 	// You'll have to add code here.
 	return ck
 }
@@ -57,33 +54,30 @@ func (ck *Clerk) Get(key string) string {
 // the types of args and reply (including whether they are pointers)
 // must match the declared types of the RPC handler function's
 // arguments. and reply must be passed as a pointer.
-func (ck *Clerk) PutAppend(key string, value string, op string) string {
+func (ck *Clerk) PutAppend(key string, value string, op string) (string, int64) {
 	// You will have to modify this function.
 	args := PutAppendArgs{Key: key, Value: value, Nonce: nrand()}
 	reply := PutAppendReply{}
 	for {
+		//fmt.Println("PUT IN")
 		if ok := ck.server.Call("KVServer."+op, &args, &reply); ok {
 			break
 		}
 	}
 
-	// 删除
-	if op == "Append" {
-		ck.receiveNonce = args.Nonce
-	}
-
-	return reply.Value
+	return reply.Value, args.Nonce
 }
 
 func (ck *Clerk) Put(key string, value string) {
 	ck.PutAppend(key, value, "Put")
+	//fmt.Println("PUT OVER")
 }
 
 // Append value to key's value and return that value
 func (ck *Clerk) Append(key string, value string) string {
-	res := ck.PutAppend(key, value, "Append")
+	res, nonce := ck.PutAppend(key, value, "Append")
 	for {
-		if ok := ck.server.Call("KVServer.Received", &ReceivedArgs{Nonce: ck.receiveNonce}, &ReceivedReply{}); ok {
+		if ok := ck.server.Call("KVServer.Received", &ReceivedArgs{Nonce: nonce}, &ReceivedReply{}); ok {
 			break
 		}
 	}

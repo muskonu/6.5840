@@ -83,13 +83,13 @@ type Raft struct {
 	timeoutTicker *time.Timer
 	log           []Entry //日志条目；每一条包含了状态机指令以及该条目被leader收到时的任期号
 
-	//3D
 	commitIndex int //已知被提交的最高日志条目索引号，一开始是0，单调递增
 	lastApplied int //应用到状态机的最高日志条目索引号，一开始为0，单调递增
 
 	nextIndex  []int // leader保持对于其他所有server下次应该发送的日志的index
 	matchIndex []int // leader保持对于其他所有server已知最大的已复制的index
 
+	//3D
 	snapshot          []byte
 	lastIncludedIndex int // 快照中最后一个日志的索引
 	lastIncludedTerm  int // 快照中最后一个日志的任期
