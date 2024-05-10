@@ -169,6 +169,9 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 	// Your code here (3D).
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
+	if index <= rf.lastIncludedIndex {
+		return
+	}
 	rf.snapshot = snapshot
 	rf.lastIncludedTerm = rf.log[index-rf.lastIncludedIndex-1].Term
 	rf.log = rf.log[index-rf.lastIncludedIndex:]
@@ -301,7 +304,12 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	//If an existing entry conflicts with a new one (same index
 	//but different terms), delete the existing entry and all that
 	//follow it
+
 	for _, entry := range args.Entries {
+		// 发送的entry已被接收过，并且被存储为快照
+		if entry.Index-rf.lastIncludedIndex-1 < 0 {
+			continue
+		}
 		if entry.Index > rf.lastIncludedIndex+len(rf.log) {
 			rf.log = append(rf.log, entry)
 		} else if rf.log[entry.Index-rf.lastIncludedIndex-1].Term != entry.Term {
@@ -349,9 +357,16 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 	}
 
 	//收到了过期的快照，直接返回
-	if args.LastIncludedIndex < rf.commitIndex {
+	if args.LastIncludedIndex <= rf.commitIndex {
 		return
 	}
+
+	//若收到了任期更高的请求，则将自身的term更新成request的term，不是follower的变为follower
+	if rf.currentTerm < args.Term || rf.state == CANDIDATE {
+		rf.BecomeFollower(args.Term)
+	}
+
+	rf.resetTicker(500)
 
 	if args.LastIncludedIndex >= rf.lastIncludedIndex+len(rf.log) || //所有日志都被覆盖，server的日志置为nil
 		rf.log[args.LastIncludedIndex-rf.lastIncludedIndex-1].Term != args.LastIncludedTerm {
@@ -361,6 +376,7 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 	}
 	rf.snapshot = args.Data
 	rf.lastIncludedIndex = args.LastIncludedIndex
+	rf.commitIndex = max(rf.commitIndex, args.LastIncludedIndex)
 	rf.lastIncludedTerm = args.LastIncludedTerm
 }
 
@@ -560,4 +576,10 @@ func (rf *Raft) resetImmediately() {
 		}
 	}
 	rf.timeoutTicker.Reset(0)
+}
+
+func (rf *Raft) RaftState() (size int, index int) {
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	return rf.persister.RaftStateSize(), rf.lastApplied
 }
